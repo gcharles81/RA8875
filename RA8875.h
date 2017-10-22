@@ -376,6 +376,7 @@ class RA8875 : public Print {
 	void 		drawFlashImage(int16_t x,int16_t y,int16_t w,int16_t h,uint8_t picnum);
 //-------------- BTE -------------------------------------------------------------------------------
 	void 		BTE_size(int16_t w, int16_t h);
+void 		r_CHGA_BTE_size(int16_t w, int16_t h);
 	void	 	BTE_moveFrom(int16_t SX,int16_t SY);
 	void	 	BTE_moveTo(int16_t DX,int16_t DY);
 	//void 		BTE_source_destination(uint16_t SX,uint16_t DX ,uint16_t SY ,uint16_t DY);
