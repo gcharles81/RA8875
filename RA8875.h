@@ -147,7 +147,7 @@ CS       10		53           YES       CS
 #define _RA8875MC_H_
 
 #include "_includes/RA8875_CPU_commons.h"
-
+#define uchar      unsigned char
 
 #if !defined(swapvals)
 	#if defined(ESP8266)
@@ -376,7 +376,6 @@ class RA8875 : public Print {
 	void 		drawFlashImage(int16_t x,int16_t y,int16_t w,int16_t h,uint8_t picnum);
 //-------------- BTE -------------------------------------------------------------------------------
 	void 		BTE_size(int16_t w, int16_t h);
-void 		r_CHGA_BTE_size(int16_t w, int16_t h);
 	void	 	BTE_moveFrom(int16_t SX,int16_t SY);
 	void	 	BTE_moveTo(int16_t DX,int16_t DY);
 	//void 		BTE_source_destination(uint16_t SX,uint16_t DX ,uint16_t SY ,uint16_t DY);
@@ -396,6 +395,15 @@ void 		r_CHGA_BTE_size(int16_t w, int16_t h);
 	void 		enableISR(bool force = false); 
 	void 		setInternalInt(enum RA8875intlist b);//   BTE,TOUCH,DMA,KEY
 	void 		clearInternalInt(enum RA8875intlist b);// BTE,TOUCH,DMA,KEY
+//-------------- CHGA SPI FLASH ------------------------------------------------------------------------------
+void DMA_block_move(uint16_t X,uint16_t Y,uint16_t BWR,uint16_t BHR,uint16_t SPWR,uint64_t start_address);
+void dispicown(uint16_t x,uint16_t y, uint16_t w,uint16_t h,uint64_t start);
+void Write_Dir(uchar Cmd,uchar Data);
+void XY_Coordinate(uint16_t X,uint16_t Y);
+void		Active_Window(uint XL,uint XR ,uint YT ,uint YB);
+void DMA_block_mode_size_setting(uint BWR,uint BHR,uint SPWR);
+void DMA_Start_address_setting(ulong set_address);
+ void Chk_DMA_Busy(void);
 //-------------- TOUCH SCREEN ---------------------------------------------------------------------
 #if !defined(_AVOID_TOUCHSCREEN)
 	bool 		touched(bool safe=false);

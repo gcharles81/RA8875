@@ -5870,8 +5870,130 @@ void RA8875::writeCommand(const uint8_t d)
 	#endif
 	_endSend();
 }
+void RA8875::dispicown(uint16_t x,uint16_t y, uint16_t w,uint16_t h,uint64_t start)
+{  
+ _waitPoll(0xBF,0x01);
 
+ DMA_block_move(x,y,w,h,w,start);
+ 
+  //Chk_DMA_Busy();
 
+} 
+///////////////The FLASH reading area   setting
+void RA8875::DMA_block_move(uint16_t X,uint16_t Y,uint16_t BWR,uint16_t BHR,uint16_t SPWR,uint64_t start_address)
+{  
+   Write_Dir(0X06,0X00);//FLASH frequency setting
+   Write_Dir(0X05,0X87);//FLASH setting 
+   writeCommand(0xBF);
+   _writeData(0x02);
+
+   XY_Coordinate(X,Y);
+    Active_Window(X,X+BWR-1,Y,Y+BHR);  
+   DMA_block_mode_size_setting(BWR,BHR,SPWR);
+   DMA_Start_address_setting(start_address);      
+   //DMA_Start_enable();
+    writeCommand(0xBF);
+   _writeData(0x03);
+   Chk_DMA_Busy();
+ //  	 Serial.println(readReg(0x04),BIN);
+  //Serial.println(readReg(0x05),BIN);
+  //Serial.println(readReg(0x06),BIN);
+
+ }
+ 
+ void RA8875::Write_Dir(uchar Cmd,uchar Data)
+{
+  writeCommand(Cmd);
+  _writeData(Data);
+}
+
+void RA8875::XY_Coordinate(uint16_t X,uint16_t Y)
+{
+    writeCommand(0x46);
+	_writeData(X);  
+    writeCommand(0x47);	   
+	_writeData(X>>8);
+ 
+    writeCommand(0x48);
+	_writeData(Y);  
+    writeCommand(0x49);	   
+	_writeData(Y>>8);
+}
+void RA8875::Active_Window(uint XL,uint XR ,uint YT ,uint YB)
+{
+	uchar temp;
+    //setting active window X
+	temp=XL;   
+    writeCommand(0x30);//HSAW0
+	_writeData(temp);
+	temp=XL>>8;   
+    writeCommand(0x31);//HSAW1	   
+	_writeData(temp);
+
+	temp=XR;   
+    writeCommand(0x34);//HEAW0
+	_writeData(temp);
+	temp=XR>>8;   
+    writeCommand(0x35);//HEAW1	   
+	_writeData(temp);
+
+    //setting active window Y
+	temp=YT;   
+    writeCommand(0x32);//VSAW0
+	_writeData(temp);
+	temp=YT>>8;   
+    writeCommand(0x33);//VSAW1	   
+	_writeData(temp);
+
+	temp=YB;   
+    writeCommand(0x36);//VEAW0
+	_writeData(temp);
+	temp=YB>>8;   
+    writeCommand(0x37);//VEAW1	   
+	_writeData(temp);
+}
+void RA8875::DMA_block_mode_size_setting(uint BWR,uint BHR,uint SPWR)
+{
+  	writeCommand(0xB4);
+  	_writeData(BWR);
+  	writeCommand(0xB5);
+  	_writeData(BWR>>8);
+
+  	writeCommand(0xB6);
+  	_writeData(BHR);
+  	writeCommand(0xB7);
+  	_writeData(BHR>>8);
+
+  	writeCommand(0xB8);
+  	_writeData(SPWR);
+  	writeCommand(0xB9);
+  	_writeData(SPWR>>8);  
+}
+
+void  RA8875::DMA_Start_address_setting(ulong set_address)
+{ 
+  	writeCommand(0xB0);
+  	_writeData(set_address);
+
+  	writeCommand(0xB1);
+  	_writeData(set_address>>8);
+
+	writeCommand(0xB2);
+  	_writeData(set_address>>16);
+
+  	writeCommand(0xB3);
+  	_writeData(set_address>>24);
+}
+///////////////check dma busy
+void RA8875::Chk_DMA_Busy(void)
+{
+	uchar temp; 	
+	do
+	{
+	writeCommand(0xBF);
+	temp =readStatus();
+	}while(temp==0x01);   
+}
 /*
  void RA8875::debugData(uint16_t data,uint8_t len)
 {
