@@ -1,5 +1,5 @@
 /*
-	--------------------------------------------------
+//	--------------------------------------------------
 	RA8875 LCD/TFT Graphic Controller Driver Library
 	--------------------------------------------------
 	Version:0.70b11p11
@@ -404,6 +404,17 @@ void		Active_Window(uint XL,uint XR ,uint YT ,uint YB);
 void DMA_block_mode_size_setting(uint BWR,uint BHR,uint SPWR);
 void DMA_Start_address_setting(ulong set_address);
  void Chk_DMA_Busy(void);
+ 
+ 				void setActiveWindow0(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+		void setActiveWindow0(void);
+		void getActiveWindow0(uint16_t &x1, uint16_t &y1, uint16_t &x2, uint16_t &y2);
+		  		// graphic set location
+		 void setCursor0(int16_t x, int16_t y);
+		void getCursor0(int16_t &x, int16_t &y);
+		 void setCursorX0(int16_t x);
+		 void setCursorY0(int16_t y) ;
+		 	uint8_t readReg(uint8_t reg);
+			bool _swapxy;
 //-------------- TOUCH SCREEN ---------------------------------------------------------------------
 #if !defined(_AVOID_TOUCHSCREEN)
 	bool 		touched(bool safe=false);
