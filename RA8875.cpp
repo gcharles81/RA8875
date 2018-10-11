@@ -2839,19 +2839,26 @@ void RA8875::DMA_enable(void)
 /**************************************************************************/
 void RA8875::drawFlashImage(int16_t x,int16_t y,int16_t w,int16_t h,uint8_t picnum)
 {  
-	if (_portrait){swapvals(x,y); swapvals(w,h);}//0.69b21 -have to check this, not verified
+//	if (_portrait){swapvals(x,y); swapvals(w,h);}//0.69b21 -have to check this, not verified
 	if (_textMode) _setTextMode(false);//we are in text mode?
-	_writeRegister(RA8875_SFCLR,0x00);
-	_writeRegister(RA8875_SROC,0x87);
-	_writeRegister(RA8875_DMACR,0x02);
+	
+	          Write_Dir(0X06,0X00);//FLASH frequency setting   
+    Write_Dir(0X05,0Xac);//FLASH setting  this solved my issues babe wohhhhho 
+	
+   writeCommand(0xBF);
+   _writeData(0x02);
+   
+	//_writeRegister(RA8875_SFCLR,0x00);
+//	_writeRegister(RA8875_SROC,0x87);
+	//_writeRegister(RA8875_DMACR,0x02);
 	//setActiveWindow(0,_width-1,0,_height-1); 
 	_checkLimits_helper(x,y);
 	_checkLimits_helper(w,h);
-	_portrait == true ? setXY(y,x) : setXY(x,y);
+	//_portrait == true ? setXY(y,x) : setXY(x,y);
 	
 	DMA_startAddress(261120 * (picnum-1));
 	DMA_blockModeSize(w,h,w);   
-	_writeRegister(RA8875_DMACR,0x03);
+	//_writeRegister(RA8875_DMACR,0x03);
 	_waitBusy(0x01);
 } 
 
@@ -5871,36 +5878,149 @@ void RA8875::writeCommand(const uint8_t d)
 	_endSend();
 }
 void RA8875::dispicown(uint16_t x,uint16_t y, uint16_t w,uint16_t h,uint64_t start)
-{  
+{  if (_textMode) _setTextMode(false);//we are in text mode?
  _waitPoll(0xBF,0x01);
 
  DMA_block_move(x,y,w,h,w,start);
  
-  //Chk_DMA_Busy();
+  
 
 } 
 ///////////////The FLASH reading area   setting
 void RA8875::DMA_block_move(uint16_t X,uint16_t Y,uint16_t BWR,uint16_t BHR,uint16_t SPWR,uint64_t start_address)
 {  
-   Write_Dir(0X06,0X00);//FLASH frequency setting
-   Write_Dir(0X05,0X87);//FLASH setting 
-   writeCommand(0xBF);
+
+
+	//Get cursor position 
+	int16_t x7, y7;
+	getCursor0(x7, y7);
+	//Get window position 
+	int16_t x1, y1, x2, y2;
+	getActiveWindow(x1, x2,y1,y2);
+	
+  ///Write_Dir(0X06,0X11);//FLASH frequency setting
+  // Write_Dir(0X05,0X87);//FLASH setting 
+   
+    Write_Dir(0X06,0X00);//FLASH frequency setting   
+    Write_Dir(0X05,0Xac);//FLASH setting  this solved my issues babe wohhhhho 
+	
+    writeCommand(0xBF);
    _writeData(0x02);
 
-   XY_Coordinate(X,Y);
+    XY_Coordinate(X,Y);
     Active_Window(X,X+BWR-1,Y,Y+BHR);  
    DMA_block_mode_size_setting(BWR,BHR,SPWR);
-   DMA_Start_address_setting(start_address);      
-   //DMA_Start_enable();
+   DMA_Start_address_setting(start_address);   
+
     writeCommand(0xBF);
    _writeData(0x03);
+ 
    Chk_DMA_Busy();
- //  	 Serial.println(readReg(0x04),BIN);
-  //Serial.println(readReg(0x05),BIN);
-  //Serial.println(readReg(0x06),BIN);
+
+  
+
+	//Set cursor position 
+		delay(10);
+	setCursor(x7, y7);
+	
+	//Set window position 
+	delay(10);
+	setActiveWindow(x1, x2, y1, y2);
 
  }
+ /////////////////the below got from fishino 
  
+ void RA8875::getCursor0(int16_t &x, int16_t &y)
+{
+	x = readReg(0x47) & 0x03;
+	x = (x << 8) | readReg(0x46);
+
+	y = readReg(0x49) & 0x01;
+	y = (y << 8) | readReg(0x48);
+}
+
+void RA8875::setCursor0(int16_t x, int16_t y)
+{
+	if (x < 0)
+		x = 0;
+	if (y < 0)
+		y = 0;
+
+	setCursorX0(x);
+	setCursorY0(y);
+}
+void RA8875::setCursorX0(int16_t x)
+{
+	if (x >= (int16_t)_width)
+		x = _width-1;
+	_cursorX = x;
+
+	if(_swapxy)
+	{
+		writeCommand(0x48);
+		_writeData(x);
+		Write_Dir(0x48, x);
+		Write_Dir(0x49, x >> 8);
+	
+		Write_Dir(0x2C,(x & 0xFF));
+		Write_Dir(0x2D,(x >> 8));
+	}
+	else
+	{
+		Write_Dir(0x46, x);
+		Write_Dir(0x47, x >> 8);
+	
+		Write_Dir(0x2A,(x & 0xFF));
+		Write_Dir(0x2B,(x >> 8));
+	}
+}
+
+
+void RA8875::setCursorY0(int16_t y)
+{
+	if (y >= (int16_t)_height)
+		y = _height-1;
+	_cursorY = y;
+	
+	if(_swapxy)
+	{
+		Write_Dir(0x46, y);
+		Write_Dir(0x47, y >> 8);
+	
+		Write_Dir(0x2A,(y & 0xFF));
+		Write_Dir(0x2B,(y >> 8));
+	}
+	else
+	{
+		Write_Dir(0x48, y);
+		Write_Dir(0x49, y >> 8);
+	
+		Write_Dir(0x2C,(y & 0xFF));
+		Write_Dir(0x2D,(y >> 8));
+	}
+}
+// read a register
+uint8_t  RA8875::readReg(uint8_t reg)
+{
+	writeCommand(reg);
+	return _readData();
+}
+ // get the active window
+void RA8875::getActiveWindow0(uint16_t &x1, uint16_t &y1, uint16_t &x2, uint16_t &y2)
+{
+	x1 = readReg(0x31) & 0x03;
+	x1 = (x1 << 8) | readReg(0x30);
+
+	y1 = readReg(0x33) & 0x01;
+	y1 = (y1 << 8) | readReg(0x32);
+
+	x2 = readReg(0x35) & 0x03;
+	x2 = (x2 << 8) | readReg(0x34);
+
+	y2 = readReg(0x37) & 0x01;
+	y2 = (y2 << 8) | readReg(0x36);
+}
+ //////////////////////
  void RA8875::Write_Dir(uchar Cmd,uchar Data)
 {
   writeCommand(Cmd);
